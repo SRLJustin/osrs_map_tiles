@@ -1,5 +1,6 @@
 output
-cache
+# Only the downloaded cache dir at the repo root — not e.g. net/runelite/cache source packages
+/cache/
 .idea/
 **/.DS_Store
 generated_images/diff-map*.png

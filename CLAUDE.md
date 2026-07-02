@@ -61,6 +61,25 @@ Only:
 - **XTEA keys are no longer needed** — OSRS map data is unencrypted now. `XteaKeyManager - Loaded 0 keys` and the many `Archive - revision mismatch ...` warnings during the render are **benign**; the map still renders correctly.
 - The diff step needs the previous `current-map-image-*.png` present (they're committed, so a fresh checkout is fine).
 
+## Rendering historical (pre-modern) caches
+
+The modern RuneLite cache lib can't parse early OSRS caches out of the box. Four shadow classes under `tile_generator/java/src/main/java/net/runelite/cache/` fix this — they share fully-qualified names with the library and win when our compiled classes are placed **ahead of** the `net.runelite:cache` jar on the classpath. All are no-ops on modern caches, so normal updates are unaffected.
+
+- `definitions/loaders/MapLoader.java` — legacy 2007-engine terrain encodes the tile attribute + overlay as **bytes**, not shorts. Selected via system property `-Dosrs.map.format=byte` (default `short`). Without it: `BufferUnderflowException` in `loadTerrain`.
+- `AreaManager.java` — null-guards the missing AREA config archive (world-map areas postdate 2013).
+- `WorldMapManager.java` — null-guards the missing WORLDMAP index + intermap-link clientscript.
+- `MapImageDumper.java` — upstream copy with null-guards on tiles referencing overlay/underlay definitions absent from the old cache (treated as no overlay / skipped).
+
+`pilot_render.py` (repo root) is a render-only harness for a specific cache. Inside the container:
+
+```sh
+CACHE_ID=<openrs2 cache id> MAP_FORMAT=byte \
+  java -Xmx8g -Dosrs.map.format=byte \
+  -cp /java/build/classes/java/main:/java/build/libs/mapimage-wrapper-1.0-all.jar ...
+```
+
+Proven on build 1 (openrs2 id 241, 2013-02-22) — renders the correct 2007-era mainland. **Not yet wired into full tile generation**; the byte↔short crossover build and mid-era validation are still open.
+
 ## Automating (future)
 
 The pipeline auto-detects the latest openrs2 cache and the latest RuneLite version, so it is cron-friendly. If moving to GitHub Actions: public-repo runners have enough RAM (16 GB) for the 8 GB Java heap, but the millions-of-files checkout is the real bottleneck — a self-hosted runner that keeps the working tree warm avoids re-cloning every run. Have it open a PR (not push to `master`) and only when tiles actually changed.
