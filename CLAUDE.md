@@ -9,6 +9,18 @@ The OSRS world map split into 256px tiles for leaflet-style map viewers.
 - `0/ 1/ 2/ 3/` — one directory per map plane (z-level). Inside each: `<zoom>/<x>/<y>.png`, zoom levels 3–11.
 - `generated_images/current-map-image-{0..3}.png` — the full rendered map image per plane. These are the source the tiles are cut from **and** the baseline the next update diffs against, so they must stay in the repo.
 
+## Before updating: sync `internal` with `main`
+
+**Always start from the latest published maps.** The diff step only regenerates tiles that changed since the committed `current-map-image-*.png`, so `internal` must hold the newest images before you generate. Pull `main` in first:
+
+```sh
+git checkout internal
+git fetch origin
+git merge origin/main        # brings in the most recently merged rev-N images
+```
+
+Do map generation on `internal` (it has the build fixes). Then commit only the images to a fresh `rev-N` branch for the PR to `main` (see "What to commit").
+
 ## How to update the images
 
 Needs Docker (Desktop configured with ≥ 8 GB memory). The generator downloads the latest cache from openrs2, renders the full map images, diffs them against the committed `current-map-image-*.png`, and regenerates **only the changed tiles**. Full run is ~25–30 min.
