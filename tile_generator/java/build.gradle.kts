@@ -35,6 +35,12 @@ fun getLatestRunelite(): String {
 
 dependencies {
     implementation("net.runelite:cache:${getLatestRunelite()}")
+
+    // Directly used by Main.java but only runtime-scoped transitives of net.runelite:cache,
+    // so they are absent from the compile classpath. Declared explicitly to fix compilation.
+    implementation("commons-cli:commons-cli:1.5.0")
+    implementation("org.slf4j:slf4j-api:1.7.36")
+    implementation("org.antlr:antlr4-runtime:4.13.1")
 }
 
 tasks.shadowJar {

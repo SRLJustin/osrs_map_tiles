@@ -1,0 +1,4 @@
+# Keep the Gradle wrapper script LF so the Docker build can execute it.
+# Windows core.autocrlf=true otherwise checks it out as CRLF, and the build
+# then fails with: ./java/gradlew: required file not found
+tile_generator/java/gradlew text eol=lf
